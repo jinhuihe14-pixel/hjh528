@@ -76,6 +76,39 @@ export enum StageType {
   BOSS = 'boss',
 }
 
+export enum StageDifficulty {
+  EASY = 'easy',
+  NORMAL = 'normal',
+  HARD = 'hard',
+  CHALLENGE = 'challenge',
+}
+
+export enum GuideStepType {
+  DIALOG = 'dialog',
+  HIGHLIGHT = 'highlight',
+  TASK = 'task',
+  REWARD = 'reward',
+}
+
+export enum OperationLogType {
+  CONFIG_UPDATE = 'config_update',
+  ACTIVITY_CREATE = 'activity_create',
+  ACTIVITY_UPDATE = 'activity_update',
+  STAGE_UPDATE = 'stage_update',
+  ITEM_UPDATE = 'item_update',
+  CARD_UPDATE = 'card_update',
+  PLAYER_BAN = 'player_ban',
+  PLAYER_UNBAN = 'player_unban',
+  REWARD_GRANT = 'reward_grant',
+}
+
+export enum SignInCycleType {
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTHLY = 'monthly',
+  LIMITED = 'limited',
+}
+
 export enum ActivityType {
   SIGN_IN = 'sign_in',
   TASK = 'task',

@@ -6,10 +6,11 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
-import { StageType } from '@game/shared';
+import { StageType, StageDifficulty } from '@game/shared';
 
 @Entity('stage_templates')
 @Index('idx_chapter_id', ['chapterId'])
+@Index('idx_difficulty', ['difficulty'])
 export class StageTemplateEntity {
   @PrimaryColumn({ length: 50 })
   id: string;
@@ -22,6 +23,9 @@ export class StageTemplateEntity {
 
   @Column({ type: 'varchar', length: 20 })
   type: StageType;
+
+  @Column({ type: 'varchar', length: 20, default: 'normal' })
+  difficulty: StageDifficulty;
 
   @Column({ length: 500, default: '' })
   description: string;

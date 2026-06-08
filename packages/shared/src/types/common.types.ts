@@ -1,3 +1,5 @@
+import { OperationLogType } from '../enums';
+
 export interface PaginationParams {
   page: number;
   pageSize: number;
@@ -70,11 +72,15 @@ export interface OperationLog {
   id: string;
   operatorId: string;
   operatorName: string;
+  type: OperationLogType;
   module: string;
   action: string;
   targetId?: string;
+  targetName?: string;
   oldValue?: Record<string, any>;
   newValue?: Record<string, any>;
-  ip: string;
+  changes: string[];
+  ip?: string;
+  remark?: string;
   createdAt: Date;
 }

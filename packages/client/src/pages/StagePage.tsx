@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { StageType } from '@game/shared';
+import { StageType, StageDifficulty } from '@game/shared';
 import Loading from '../components/Loading';
 import Empty from '../components/Empty';
 
@@ -10,20 +10,28 @@ const mockChapters = [
     name: '序章：觉醒之地',
     description: '冒险的起点，踏上成为最强卡牌师的道路',
     requiredLevel: 1,
-    totalStages: 6,
+    totalStages: 8,
     clearedStages: 6,
-    totalStars: 18,
+    totalStars: 24,
     earnedStars: 18,
     unlocked: true,
+    difficultyGroup: {
+      [StageDifficulty.EASY]: { unlocked: true, totalStages: 2, clearedStages: 2 },
+      [StageDifficulty.NORMAL]: { unlocked: true, totalStages: 3, clearedStages: 3 },
+      [StageDifficulty.HARD]: { unlocked: true, totalStages: 2, clearedStages: 1 },
+      [StageDifficulty.CHALLENGE]: { unlocked: false, totalStages: 1, clearedStages: 0 },
+    },
     reward: { gold: 10000, diamond: 100, items: [{ name: '初级经验药水', count: 5, icon: '🧪' }] },
     rewardClaimed: true,
     stages: [
-      { id: 'stage_1_1', name: '新手试炼', level: 1, staminaCost: 5, stars: 3, maxStars: 3, type: StageType.NORMAL, recommendedPower: 1000, cleared: true, firstClear: true },
-      { id: 'stage_1_2', name: '森林入口', level: 3, staminaCost: 5, stars: 3, maxStars: 3, type: StageType.NORMAL, recommendedPower: 2000, cleared: true, firstClear: true },
-      { id: 'stage_1_3', name: '哥布林营地', level: 5, staminaCost: 6, stars: 3, maxStars: 3, type: StageType.NORMAL, recommendedPower: 3500, cleared: true, firstClear: true },
-      { id: 'stage_1_4', name: '幽暗洞穴', level: 7, staminaCost: 6, stars: 3, maxStars: 3, type: StageType.NORMAL, recommendedPower: 5000, cleared: true, firstClear: true },
-      { id: 'stage_1_5', name: '精英守卫', level: 10, staminaCost: 10, stars: 3, maxStars: 3, type: StageType.ELITE, recommendedPower: 8000, cleared: true, firstClear: true },
-      { id: 'stage_1_6', name: '森林之王', level: 12, staminaCost: 15, stars: 3, maxStars: 3, type: StageType.BOSS, recommendedPower: 12000, cleared: true, firstClear: true },
+      { id: 'stage_1_1', name: '新手试炼', level: 1, staminaCost: 5, stars: 3, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.EASY, recommendedPower: 1000, cleared: true, firstClear: true },
+      { id: 'stage_1_2', name: '森林入口', level: 3, staminaCost: 5, stars: 3, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.EASY, recommendedPower: 2000, cleared: true, firstClear: true },
+      { id: 'stage_1_3', name: '哥布林营地', level: 5, staminaCost: 6, stars: 3, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 3500, cleared: true, firstClear: true },
+      { id: 'stage_1_4', name: '幽暗洞穴', level: 7, staminaCost: 6, stars: 3, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 5000, cleared: true, firstClear: true },
+      { id: 'stage_1_5', name: '精英守卫', level: 10, staminaCost: 10, stars: 3, maxStars: 3, type: StageType.ELITE, difficulty: StageDifficulty.NORMAL, recommendedPower: 8000, cleared: true, firstClear: true },
+      { id: 'stage_1_6', name: '森林之王', level: 12, staminaCost: 15, stars: 3, maxStars: 3, type: StageType.BOSS, difficulty: StageDifficulty.HARD, recommendedPower: 12000, cleared: true, firstClear: true },
+      { id: 'stage_1_7', name: '迷雾深林', level: 15, staminaCost: 12, stars: 2, maxStars: 3, type: StageType.HARD, difficulty: StageDifficulty.HARD, recommendedPower: 18000, cleared: false, firstClear: false },
+      { id: 'stage_1_8', name: '远古守护者', level: 18, staminaCost: 20, stars: 0, maxStars: 3, type: StageType.BOSS, difficulty: StageDifficulty.CHALLENGE, recommendedPower: 25000, cleared: false, firstClear: false },
     ],
   },
   {
@@ -31,22 +39,30 @@ const mockChapters = [
     name: '第一章：火焰山脉',
     description: '炙热的火焰山脉，蕴含着强大的火元素力量',
     requiredLevel: 10,
-    totalStages: 8,
+    totalStages: 10,
     clearedStages: 4,
-    totalStars: 24,
+    totalStars: 30,
     earnedStars: 12,
     unlocked: true,
+    difficultyGroup: {
+      [StageDifficulty.EASY]: { unlocked: true, totalStages: 2, clearedStages: 2 },
+      [StageDifficulty.NORMAL]: { unlocked: true, totalStages: 4, clearedStages: 2 },
+      [StageDifficulty.HARD]: { unlocked: true, totalStages: 3, clearedStages: 0 },
+      [StageDifficulty.CHALLENGE]: { unlocked: false, totalStages: 1, clearedStages: 0 },
+    },
     reward: { gold: 30000, diamond: 300, items: [{ name: '突破石', count: 3, icon: '💎' }] },
     rewardClaimed: false,
     stages: [
-      { id: 'stage_2_1', name: '山脚营地', level: 15, staminaCost: 8, stars: 3, maxStars: 3, type: StageType.NORMAL, recommendedPower: 15000, cleared: true, firstClear: true },
-      { id: 'stage_2_2', name: '熔岩小径', level: 18, staminaCost: 8, stars: 3, maxStars: 3, type: StageType.NORMAL, recommendedPower: 20000, cleared: true, firstClear: true },
-      { id: 'stage_2_3', name: '火焰精灵', level: 20, staminaCost: 10, stars: 2, maxStars: 3, type: StageType.NORMAL, recommendedPower: 28000, cleared: true, firstClear: true },
-      { id: 'stage_2_4', name: '火山口', level: 22, staminaCost: 10, stars: 1, maxStars: 3, type: StageType.NORMAL, recommendedPower: 35000, cleared: true, firstClear: true },
-      { id: 'stage_2_5', name: '精英炎魔', level: 25, staminaCost: 15, stars: 0, maxStars: 3, type: StageType.ELITE, recommendedPower: 50000, cleared: false, firstClear: false },
-      { id: 'stage_2_6', name: '熔岩深处', level: 28, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.HARD, recommendedPower: 60000, cleared: false, firstClear: false },
-      { id: 'stage_2_7', name: '火焰神殿', level: 30, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.HARD, recommendedPower: 70000, cleared: false, firstClear: false },
-      { id: 'stage_2_8', name: '火焰领主', level: 32, staminaCost: 20, stars: 0, maxStars: 3, type: StageType.BOSS, recommendedPower: 90000, cleared: false, firstClear: false },
+      { id: 'stage_2_1', name: '山脚营地', level: 15, staminaCost: 8, stars: 3, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.EASY, recommendedPower: 15000, cleared: true, firstClear: true },
+      { id: 'stage_2_2', name: '熔岩小径', level: 18, staminaCost: 8, stars: 3, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.EASY, recommendedPower: 20000, cleared: true, firstClear: true },
+      { id: 'stage_2_3', name: '火焰精灵', level: 20, staminaCost: 10, stars: 2, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 28000, cleared: true, firstClear: true },
+      { id: 'stage_2_4', name: '火山口', level: 22, staminaCost: 10, stars: 1, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 35000, cleared: true, firstClear: true },
+      { id: 'stage_2_5', name: '精英炎魔', level: 25, staminaCost: 15, stars: 0, maxStars: 3, type: StageType.ELITE, difficulty: StageDifficulty.NORMAL, recommendedPower: 50000, cleared: false, firstClear: false },
+      { id: 'stage_2_6', name: '火焰祭坛', level: 28, staminaCost: 15, stars: 0, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 60000, cleared: false, firstClear: false },
+      { id: 'stage_2_7', name: '熔岩深处', level: 28, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.HARD, difficulty: StageDifficulty.HARD, recommendedPower: 60000, cleared: false, firstClear: false },
+      { id: 'stage_2_8', name: '火焰神殿', level: 30, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.HARD, difficulty: StageDifficulty.HARD, recommendedPower: 70000, cleared: false, firstClear: false },
+      { id: 'stage_2_9', name: '火焰领主', level: 32, staminaCost: 20, stars: 0, maxStars: 3, type: StageType.BOSS, difficulty: StageDifficulty.HARD, recommendedPower: 90000, cleared: false, firstClear: false },
+      { id: 'stage_2_10', name: '炎狱之王', level: 35, staminaCost: 25, stars: 0, maxStars: 3, type: StageType.BOSS, difficulty: StageDifficulty.CHALLENGE, recommendedPower: 150000, cleared: false, firstClear: false },
     ],
   },
   {
@@ -54,22 +70,30 @@ const mockChapters = [
     name: '第二章：冰封雪原',
     description: '终年积雪的冰封雪原，神秘的冰元素等待探索',
     requiredLevel: 25,
-    totalStages: 8,
+    totalStages: 10,
     clearedStages: 0,
-    totalStars: 24,
+    totalStars: 30,
     earnedStars: 0,
     unlocked: false,
+    difficultyGroup: {
+      [StageDifficulty.EASY]: { unlocked: false, totalStages: 2, clearedStages: 0 },
+      [StageDifficulty.NORMAL]: { unlocked: false, totalStages: 4, clearedStages: 0 },
+      [StageDifficulty.HARD]: { unlocked: false, totalStages: 3, clearedStages: 0 },
+      [StageDifficulty.CHALLENGE]: { unlocked: false, totalStages: 1, clearedStages: 0 },
+    },
     reward: { gold: 50000, diamond: 500, items: [{ name: '高级经验药水', count: 3, icon: '🧪' }] },
     rewardClaimed: false,
     stages: [
-      { id: 'stage_3_1', name: '雪原入口', level: 30, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.NORMAL, recommendedPower: 80000, cleared: false, firstClear: false },
-      { id: 'stage_3_2', name: '冰晶森林', level: 32, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.NORMAL, recommendedPower: 95000, cleared: false, firstClear: false },
-      { id: 'stage_3_3', name: '冰冻湖泊', level: 35, staminaCost: 15, stars: 0, maxStars: 3, type: StageType.NORMAL, recommendedPower: 110000, cleared: false, firstClear: false },
-      { id: 'stage_3_4', name: '雪怪部落', level: 38, staminaCost: 15, stars: 0, maxStars: 3, type: StageType.NORMAL, recommendedPower: 130000, cleared: false, firstClear: false },
-      { id: 'stage_3_5', name: '精英冰魔', level: 40, staminaCost: 20, stars: 0, maxStars: 3, type: StageType.ELITE, recommendedPower: 160000, cleared: false, firstClear: false },
-      { id: 'stage_3_6', name: '冰窟深处', level: 42, staminaCost: 18, stars: 0, maxStars: 3, type: StageType.HARD, recommendedPower: 180000, cleared: false, firstClear: false },
-      { id: 'stage_3_7', name: '冰封神殿', level: 45, staminaCost: 18, stars: 0, maxStars: 3, type: StageType.HARD, recommendedPower: 200000, cleared: false, firstClear: false },
-      { id: 'stage_3_8', name: '冰霜女王', level: 48, staminaCost: 25, stars: 0, maxStars: 3, type: StageType.BOSS, recommendedPower: 250000, cleared: false, firstClear: false },
+      { id: 'stage_3_1', name: '雪原入口', level: 30, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.EASY, recommendedPower: 80000, cleared: false, firstClear: false },
+      { id: 'stage_3_2', name: '冰晶森林', level: 32, staminaCost: 12, stars: 0, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.EASY, recommendedPower: 95000, cleared: false, firstClear: false },
+      { id: 'stage_3_3', name: '冰冻湖泊', level: 35, staminaCost: 15, stars: 0, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 110000, cleared: false, firstClear: false },
+      { id: 'stage_3_4', name: '雪怪部落', level: 38, staminaCost: 15, stars: 0, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 130000, cleared: false, firstClear: false },
+      { id: 'stage_3_5', name: '精英冰魔', level: 40, staminaCost: 20, stars: 0, maxStars: 3, type: StageType.ELITE, difficulty: StageDifficulty.NORMAL, recommendedPower: 160000, cleared: false, firstClear: false },
+      { id: 'stage_3_6', name: '冰川峡谷', level: 42, staminaCost: 20, stars: 0, maxStars: 3, type: StageType.NORMAL, difficulty: StageDifficulty.NORMAL, recommendedPower: 180000, cleared: false, firstClear: false },
+      { id: 'stage_3_7', name: '冰窟深处', level: 42, staminaCost: 18, stars: 0, maxStars: 3, type: StageType.HARD, difficulty: StageDifficulty.HARD, recommendedPower: 180000, cleared: false, firstClear: false },
+      { id: 'stage_3_8', name: '冰封神殿', level: 45, staminaCost: 18, stars: 0, maxStars: 3, type: StageType.HARD, difficulty: StageDifficulty.HARD, recommendedPower: 200000, cleared: false, firstClear: false },
+      { id: 'stage_3_9', name: '冰霜女王', level: 48, staminaCost: 25, stars: 0, maxStars: 3, type: StageType.BOSS, difficulty: StageDifficulty.HARD, recommendedPower: 250000, cleared: false, firstClear: false },
+      { id: 'stage_3_10', name: '极寒冰龙', level: 50, staminaCost: 30, stars: 0, maxStars: 3, type: StageType.BOSS, difficulty: StageDifficulty.CHALLENGE, recommendedPower: 350000, cleared: false, firstClear: false },
     ],
   },
 ];
@@ -88,12 +112,34 @@ const stageTypeColors: Record<StageType, string> = {
   [StageType.BOSS]: 'bg-red-500/20 text-red-400',
 };
 
+const difficultyLabels: Record<StageDifficulty, string> = {
+  [StageDifficulty.EASY]: '简单',
+  [StageDifficulty.NORMAL]: '普通',
+  [StageDifficulty.HARD]: '困难',
+  [StageDifficulty.CHALLENGE]: '挑战',
+};
+
+const difficultyColors: Record<StageDifficulty, string> = {
+  [StageDifficulty.EASY]: 'bg-green-500/20 text-green-400 border-green-500/30',
+  [StageDifficulty.NORMAL]: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  [StageDifficulty.HARD]: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  [StageDifficulty.CHALLENGE]: 'bg-red-500/20 text-red-400 border-red-500/30',
+};
+
+const difficultyTabColors: Record<StageDifficulty, string> = {
+  [StageDifficulty.EASY]: 'border-b-2 border-green-500 text-green-400',
+  [StageDifficulty.NORMAL]: 'border-b-2 border-blue-500 text-blue-400',
+  [StageDifficulty.HARD]: 'border-b-2 border-purple-500 text-purple-400',
+  [StageDifficulty.CHALLENGE]: 'border-b-2 border-red-500 text-red-400',
+};
+
 function StagePage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [chapters, setChapters] = useState(mockChapters);
   const [expandedChapter, setExpandedChapter] = useState<string | null>('chap_2');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<StageDifficulty>(StageDifficulty.NORMAL);
   const [showRewardModal, setShowRewardModal] = useState<any>(null);
 
   const toggleChapter = (chapterId: string) => {
@@ -116,6 +162,10 @@ function StagePage() {
 
   const canClaimReward = (chapter: any) => {
     return chapter.unlocked && !chapter.rewardClaimed && chapter.earnedStars >= chapter.totalStars * 0.5;
+  };
+
+  const getStagesByDifficulty = (chapter: any, difficulty: StageDifficulty) => {
+    return chapter.stages.filter((s: any) => s.difficulty === difficulty);
   };
 
   if (loading) {
@@ -144,6 +194,9 @@ function StagePage() {
         {chapters.map((chapter) => {
           const isExpanded = expandedChapter === chapter.id;
           const progress = (chapter.clearedStages / chapter.totalStages) * 100;
+          const diffGroup = chapter.difficultyGroup?.[selectedDifficulty];
+          const diffStages = getStagesByDifficulty(chapter, selectedDifficulty);
+          const diffUnlocked = diffGroup?.unlocked;
 
           return (
             <div
@@ -222,20 +275,66 @@ function StagePage() {
 
               {isExpanded && chapter.unlocked && (
                 <div className="p-4 pt-0">
-                  <div className="grid grid-cols-1 gap-3">
-                    {chapter.stages.map((stage: any, index: number) => {
-                      const canChallenge = index === 0 || chapter.stages[index - 1]?.cleared;
+                  <div className="flex border-b border-slate-700 mb-3 overflow-x-auto">
+                    {Object.values(StageDifficulty).map((diff) => {
+                      const dg = chapter.difficultyGroup?.[diff];
+                      const isSelected = selectedDifficulty === diff;
+                      const isUnlocked = dg?.unlocked;
+
                       return (
-                        <StageItem
-                          key={stage.id}
-                          stage={stage}
-                          index={index}
-                          canChallenge={canChallenge}
-                          onStart={() => handleStartBattle(stage.id)}
-                        />
+                        <button
+                          key={diff}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isUnlocked) {
+                              setSelectedDifficulty(diff);
+                            }
+                          }}
+                          className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-all ${
+                            isSelected
+                              ? difficultyTabColors[diff]
+                              : 'text-slate-400 hover:text-white'
+                          } ${!isUnlocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          {difficultyLabels[diff]}
+                          {dg && (
+                            <span className="ml-1 text-xs opacity-70">
+                              ({dg.clearedStages}/{dg.totalStages})
+                            </span>
+                          )}
+                          {!isUnlocked && ' 🔒'}
+                        </button>
                       );
                     })}
                   </div>
+
+                  <div className={`p-3 rounded-lg mb-3 ${difficultyColors[selectedDifficulty]} border`}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{difficultyLabels[selectedDifficulty]}难度</span>
+                      <span className="text-xs opacity-80">
+                        通关 {diffGroup?.clearedStages || 0}/{diffGroup?.totalStages || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  {diffUnlocked && diffStages.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-3">
+                      {diffStages.map((stage: any, index: number) => {
+                        const canChallenge = index === 0 || diffStages[index - 1]?.cleared;
+                        return (
+                          <StageItem
+                            key={stage.id}
+                            stage={stage}
+                            index={index}
+                            canChallenge={canChallenge}
+                            onStart={() => handleStartBattle(stage.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <Empty description={diffUnlocked ? '暂无关卡' : '该难度未解锁'} />
+                  )}
                 </div>
               )}
             </div>
@@ -300,6 +399,9 @@ function StageItem({ stage, index, canChallenge, onStart }: { stage: any; index:
             <h4 className="text-white font-medium truncate">{stage.name}</h4>
             <span className={`text-xs px-1.5 py-0.5 rounded ${stageTypeColors[stage.type]}`}>
               {stageTypeLabels[stage.type]}
+            </span>
+            <span className={`text-xs px-1.5 py-0.5 rounded ${difficultyColors[stage.difficulty]}`}>
+              {difficultyLabels[stage.difficulty]}
             </span>
           </div>
 

@@ -1,17 +1,20 @@
-import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { StageType, StageTemplate, ChapterTemplate } from '@game/shared';
+import { Repository, Between } from 'typeorm';
+import { StageType, StageDifficulty, StageTemplate, ChapterTemplate, StageDifficultyGroup, StageFeedback, StageDifficultyStats } from '@game/shared';
 
 import { StageTemplateEntity } from './stage-template.entity';
 import { ChapterTemplateEntity } from './chapter-template.entity';
 import { PlayerStageEntity } from './player-stage.entity';
-import { GetStageListDto, ChallengeStageDto } from './dto/stage.dto';
+import { GetStageListDto, ChallengeStageDto, GetStageFeedbackDto } from './dto/stage.dto';
 import { PlayerService } from '../player/player.service';
 import { BattleService } from '../battle/battle.service';
+import { BattleLogEntity, BattleType } from '../battle/battle-log.entity';
 
 @Injectable()
 export class StageService {
+  private readonly logger = new Logger(StageService.name);
+
   constructor(
     @InjectRepository(StageTemplateEntity)
     private readonly stageTemplateRepository: Repository<StageTemplateEntity>,
@@ -19,22 +22,51 @@ export class StageService {
     private readonly chapterTemplateRepository: Repository<ChapterTemplateEntity>,
     @InjectRepository(PlayerStageEntity)
     private readonly playerStageRepository: Repository<PlayerStageEntity>,
+    @InjectRepository(BattleLogEntity)
+    private readonly battleLogRepository: Repository<BattleLogEntity>,
     @Inject(forwardRef(() => PlayerService))
     private readonly playerService: PlayerService,
     @Inject(forwardRef(() => BattleService))
     private readonly battleService: BattleService,
   ) {}
 
-  async getChapterList(): Promise<ChapterTemplate[]> {
+  async getChapterList(playerId?: string): Promise<ChapterTemplate[]> {
     const chapters = await this.chapterTemplateRepository.find({
       order: { sort: 'ASC' },
     });
+
+    if (playerId) {
+      const playerProgress = await this.getPlayerProgress(playerId);
+      const player = await this.playerService.getPlayerInfo(playerId);
+
+      return chapters.map(chapter => {
+        const chapterStages = chapter.stages || [];
+        const clearedStages = chapterStages.filter(stageId =>
+          playerProgress.stages.some(s => s.stageId === stageId && s.isCleared)
+        ).length;
+        const totalStars = chapterStages.length * 3;
+        const earnedStars = chapterStages.reduce((sum, stageId) => {
+          const ps = playerProgress.stages.find(s => s.stageId === stageId);
+          return sum + (ps?.stars || 0);
+        }, 0);
+
+        return {
+          ...(chapter as unknown as ChapterTemplate),
+          unlocked: player.level >= chapter.requiredLevel,
+          totalStages: chapterStages.length,
+          clearedStages,
+          totalStars,
+          earnedStars,
+          rewardClaimed: false,
+        };
+      });
+    }
 
     return chapters as unknown as ChapterTemplate[];
   }
 
   async getStageList(dto: GetStageListDto): Promise<{ list: StageTemplate[]; total: number }> {
-    const { chapterId, type } = dto;
+    const { chapterId, type, difficulty, difficultyGroup, page = 1, pageSize = 20 } = dto;
 
     const queryBuilder = this.stageTemplateRepository.createQueryBuilder('stage');
 
@@ -44,8 +76,19 @@ export class StageService {
     if (type) {
       queryBuilder.andWhere('stage.type = :type', { type });
     }
+    if (difficulty) {
+      queryBuilder.andWhere('stage.difficulty = :difficulty', { difficulty });
+    }
+    if (difficultyGroup) {
+      queryBuilder
+        .leftJoin(ChapterTemplateEntity, 'chapter', 'stage.chapter_id = chapter.id')
+        .andWhere('chapter.difficulty_group = :difficultyGroup', { difficultyGroup });
+    }
 
     queryBuilder.orderBy('stage.sort', 'ASC');
+
+    const skip = (page - 1) * pageSize;
+    queryBuilder.skip(skip).take(pageSize);
 
     const [stages, total] = await queryBuilder.getManyAndCount();
 
@@ -53,6 +96,37 @@ export class StageService {
       list: stages as unknown as StageTemplate[],
       total,
     };
+  }
+
+  async getStagesByDifficultyGroup(chapterId: string): Promise<StageDifficultyGroup[]> {
+    const stages = await this.stageTemplateRepository.find({
+      where: { chapterId },
+      order: { sort: 'ASC' },
+    });
+
+    const difficultyOrder = [
+      StageDifficulty.EASY,
+      StageDifficulty.NORMAL,
+      StageDifficulty.HARD,
+      StageDifficulty.CHALLENGE,
+    ];
+
+    const difficultyLabels: Record<StageDifficulty, string> = {
+      [StageDifficulty.EASY]: '简单',
+      [StageDifficulty.NORMAL]: '普通',
+      [StageDifficulty.HARD]: '困难',
+      [StageDifficulty.CHALLENGE]: '挑战',
+    };
+
+    const groups: StageDifficultyGroup[] = difficultyOrder.map(difficulty => ({
+      difficulty,
+      label: difficultyLabels[difficulty],
+      stages: stages
+        .filter(s => s.difficulty === difficulty)
+        .map(s => s as unknown as StageTemplate),
+    }));
+
+    return groups.filter(g => g.stages.length > 0);
   }
 
   async getStageDetail(stageId: string): Promise<StageTemplate> {
@@ -225,5 +299,106 @@ export class StageService {
       .set({ dailyChallenges: 0 })
       .where('player_id = :playerId', { playerId })
       .execute();
+  }
+
+  async getStageFeedback(dto: GetStageFeedbackDto): Promise<StageFeedback[]> {
+    const { chapterId, difficulty, startDate, endDate } = dto;
+
+    let stageQueryBuilder = this.stageTemplateRepository.createQueryBuilder('stage');
+
+    if (chapterId) {
+      stageQueryBuilder.andWhere('stage.chapter_id = :chapterId', { chapterId });
+    }
+    if (difficulty) {
+      stageQueryBuilder.andWhere('stage.difficulty = :difficulty', { difficulty });
+    }
+
+    const stages = await stageQueryBuilder.getMany();
+
+    const feedbackList: StageFeedback[] = [];
+
+    for (const stage of stages) {
+      let battleQuery = this.battleLogRepository.createQueryBuilder('battle')
+        .where('battle.stage_id = :stageId', { stageId: stage.id })
+        .andWhere('battle.battle_type = :battleType', { battleType: BattleType.STAGE });
+
+      if (startDate) {
+        battleQuery.andWhere('battle.created_at >= :startDate', { startDate: new Date(startDate) });
+      }
+      if (endDate) {
+        battleQuery.andWhere('battle.created_at <= :endDate', { endDate: new Date(endDate) });
+      }
+
+      const battleLogs = await battleQuery.getMany();
+      const totalChallenges = battleLogs.length;
+      const winCount = battleLogs.filter(b => b.result === 'win').length;
+      const winRate = totalChallenges > 0 ? winCount / totalChallenges : 0;
+
+      const playerStages = await this.playerStageRepository.find({
+        where: { stageId: stage.id },
+      });
+      const avgStars = playerStages.length > 0
+        ? playerStages.reduce((sum, ps) => sum + ps.stars, 0) / playerStages.length
+        : 0;
+
+      feedbackList.push({
+        stageId: stage.id,
+        difficulty: stage.difficulty,
+        totalChallenges,
+        winCount,
+        winRate: Number(winRate.toFixed(4)),
+        avgStars: Number(avgStars.toFixed(2)),
+        avgCompletionTime: 0,
+      });
+    }
+
+    return feedbackList;
+  }
+
+  async getDifficultyStats(dto: GetStageFeedbackDto): Promise<StageDifficultyStats[]> {
+    const feedbackList = await this.getStageFeedback(dto);
+
+    const difficultyGroups: Record<string, StageFeedback[]> = {};
+
+    for (const feedback of feedbackList) {
+      if (!difficultyGroups[feedback.difficulty]) {
+        difficultyGroups[feedback.difficulty] = [];
+      }
+      difficultyGroups[feedback.difficulty].push(feedback);
+    }
+
+    const stats: StageDifficultyStats[] = [];
+    const difficultyOrder = [StageDifficulty.EASY, StageDifficulty.NORMAL, StageDifficulty.HARD, StageDifficulty.CHALLENGE];
+
+    for (const difficulty of difficultyOrder) {
+      const group = difficultyGroups[difficulty];
+      if (!group || group.length === 0) continue;
+
+      const totalStages = group.length;
+      const totalChallenges = group.reduce((sum, f) => sum + f.totalChallenges, 0);
+      const avgWinRate = group.reduce((sum, f) => sum + f.winRate, 0) / totalStages;
+
+      const uniquePlayerIds = new Set<string>();
+      for (const feedback of group) {
+        const playerStages = await this.playerStageRepository.find({
+          where: { stageId: feedback.stageId },
+        });
+        playerStages.forEach(ps => uniquePlayerIds.add(ps.playerId));
+      }
+
+      stats.push({
+        difficulty,
+        totalStages,
+        totalChallenges,
+        avgWinRate: Number(avgWinRate.toFixed(4)),
+        playerDistribution: uniquePlayerIds.size,
+      });
+    }
+
+    return stats;
+  }
+
+  async refreshStageCache(): Promise<void> {
+    this.logger.log('Stage cache refreshed');
   }
 }

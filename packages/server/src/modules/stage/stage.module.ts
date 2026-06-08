@@ -6,12 +6,13 @@ import { StageController } from './stage.controller';
 import { StageTemplateEntity } from './stage-template.entity';
 import { ChapterTemplateEntity } from './chapter-template.entity';
 import { PlayerStageEntity } from './player-stage.entity';
+import { BattleLogEntity } from '../battle/battle-log.entity';
 import { PlayerModule } from '../player/player.module';
 import { BattleModule } from '../battle/battle.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([StageTemplateEntity, ChapterTemplateEntity, PlayerStageEntity]),
+    TypeOrmModule.forFeature([StageTemplateEntity, ChapterTemplateEntity, PlayerStageEntity, BattleLogEntity]),
     forwardRef(() => PlayerModule),
     forwardRef(() => BattleModule),
   ],

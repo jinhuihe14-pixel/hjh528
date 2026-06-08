@@ -4,9 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('chapter_templates')
+@Index('idx_difficulty_group', ['difficultyGroup'])
 export class ChapterTemplateEntity {
   @PrimaryColumn({ length: 50 })
   id: string;
@@ -29,6 +31,9 @@ export class ChapterTemplateEntity {
     gold?: number;
     diamond?: number;
   };
+
+  @Column({ length: 50, name: 'difficulty_group', nullable: true })
+  difficultyGroup?: string;
 
   @Column({ default: 0 })
   sort: number;

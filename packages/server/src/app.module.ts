@@ -13,6 +13,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseConfigService } from './config/database.config';
 import { RedisModule } from './common/redis/redis.module';
 import { SeedModule } from './modules/seed/seed.module';
+import { StatsModule } from './modules/stats/stats.module';
+import { OperationModule } from './modules/operation/operation.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { SeedModule } from './modules/seed/seed.module';
     ActivityModule,
     RiskModule,
     SeedModule,
+    StatsModule,
+    OperationModule,
   ],
   controllers: [],
   providers: [],
